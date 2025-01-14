@@ -1,0 +1,13 @@
+- name: copy backend conf in rsyslog
+  ansible.builtin.template:
+    src: rsyslog.conf
+    dest: "/etc/rysyslog.d/{{component}}.conf"
+  when: rsyslog_config_needed | bool == true
+
+- name: restart rsyslog
+  ansible.builtin.systemd_service:
+    name: rsyslog
+    state: started
+
+
+

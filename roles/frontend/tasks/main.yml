@@ -1,0 +1,59 @@
+#- name: Install nginx package
+#  ansible.builtin.dnf:
+#    name: nginx
+#    state: latest
+#
+#- name: copy expense conf
+#  ansible.builtin.template:
+#    src: expense.conf
+#    dest: /etc/nginx/default.d/expense.conf
+#
+#- name: Import code commonly
+#  ansible.builtin.import_role:
+#    name: common
+#    tasks_from: pre-req.yml
+#
+### added for newrelic to connect with frontend
+##- name: Import code commonly
+##  ansible.builtin.import_role:
+##    name: newrelic
+##    tasks_from: nginx
+#
+#- name: restart nginx service
+#  ansible.builtin.systemd_service:
+#    name: nginx
+#    state: restarted
+#    enabled: yes
+#    daemon_reload: yes
+
+- name: download caddy
+  get_url: https://caddyserver.com/api/download?os=linux&arch=amd64
+  dest: /bin/caddy
+  mode : '0755'
+
+- name: Add App user
+  ansible.builtin.user:
+    name: "{{app_user}}"
+
+- name: Import App Pre Requisities
+  ansible.builtin.import_role:
+    name: common
+    tasks_from: app-pre-req
+
+- name: copy caddy configuration file
+  ansible.builtin.template:
+    src: Caddyfile
+    dest: "{{app_loc}}/Caddyfile"
+
+- name: Copy Caddy service file
+  ansible.builtin.template:
+    src: caddy.service
+    dest: /etc/systemd/system/caddy.service
+
+- name: Start Caddy Service
+  ansible.builtin.systemd_service:
+    name: caddy
+    state: started
+    enabled: yes
+    daemon-reload: yes
+
